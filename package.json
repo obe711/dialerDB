@@ -1,0 +1,25 @@
+{
+  "name": "dialerdb",
+  "version": "1.0.0",
+  "description": "API for SigConsulting Dialer",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/obe711/dialerDB.git"
+  },
+  "keywords": [
+    "Dialer",
+    "PBX",
+    "Asterisk",
+    "CRM"
+  ],
+  "author": "Obediah Klopfenstein",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/obe711/dialerDB/issues"
+  },
+  "homepage": "https://github.com/obe711/dialerDB#readme"
+}
