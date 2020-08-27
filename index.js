@@ -1,7 +1,8 @@
 require("dotenv").config();
 const express = require("express");
-const cors = require("cors");
 const app = express();
+const cors = require("cors");
+const path = require("path");
 const mongoose = require("mongoose");
 const errorPage = require("./middleware/errorPage");
 
@@ -20,7 +21,7 @@ mongoose
   .catch((err) => console.error("Could not connect...", err));
 
 // Static Routes
-app.use("/public", express.static("public"));
+app.use("/static", express.static(path.join(__dirname, "public")));
 
 // API Routes
 const tours = require("./routes/tours.js");
