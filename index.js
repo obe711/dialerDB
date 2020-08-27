@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 const mongoose = require("mongoose");
+const errorPage = require("./middleware/errorPage");
 
 app.use(cors());
 app.use(express.json());
@@ -24,6 +25,9 @@ app.use("/public", express.static("public"));
 // API Routes
 const tours = require("./routes/tours.js");
 app.use(`/api/${process.env.API_VERSION}/tours`, tours);
+
+// 404 Error
+app.use("*", errorPage);
 
 // Start API Server
 app.listen(process.env.API_PORT, function () {
