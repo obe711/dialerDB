@@ -9,6 +9,14 @@ const errorPage = require("./middleware/errorPage");
 app.use(cors());
 app.use(express.json());
 
+// Allow cors requests from any origin and with credentials
+app.use(
+  cors({
+    origin: (origin, callback) => callback(null, true),
+    credentials: true,
+  })
+);
+
 // Mongoose Connection
 mongoose
   .connect(process.env.MONGO_DB, {
