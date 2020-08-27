@@ -21,7 +21,7 @@ mongoose
   .catch((err) => console.error("Could not connect...", err));
 
 // Static Routes
-app.use("/static", express.static(path.join(__dirname, "static")));
+//app.use("/static", express.static(path.join(__dirname, "static")));
 
 // API Routes
 const tours = require("./routes/tours.js");
