@@ -1,13 +1,16 @@
-const express = require("express");
-const router = express.Router();
+const router = require("express").Router();
 const { Tour } = require("../models/Tour");
 const { apiErrorHandler } = require("../services");
 
 // POST ONE New
 router.get("/post", async (req, res) => {
   try {
-    await new Tour(req.query).save();
-    res.status(200).send("ok");
+    const ph = req.query.phone;
+    const regexObj = / ^(?:\+?1?[-.\s]?)(\d{3})([-.\s])(\d{3})\2(\d{4})$ /;
+    const phone =
+      "+" +
+      `${regexObj.test(ph) ? `${ph.replace(regexObj, $1$2$3)}` : ph}`.trim();
+    res.json(await new Tour({ ...req.query, phone, sms: [] }).save());
   } catch (err) {
     apiErrorHandler(res, err);
   }

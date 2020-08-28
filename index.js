@@ -6,6 +6,7 @@ const path = require("path");
 const mongoose = require("mongoose");
 const errorPage = require("./middleware/errorPage");
 
+app.disable("x-powered-by");
 app.use(cors());
 app.use(express.json());
 
@@ -32,15 +33,15 @@ mongoose
 app.use("/static", express.static(path.join(__dirname, "static")));
 
 // API Routes
-const tours = require("./routes/tours.js");
-app.use(`/api/${process.env.API_VERSION}/tours`, tours);
+app.use(`/api/${process.env.API_VERSION}/tours`, require("./routes/tours.js"));
+app.use(`/api/${process.env.API_VERSION}/sms`, require("./routes/sms.js"));
 
 // 404 Error
 app.use("*", errorPage);
 
 // Start API Server
-app.listen(process.env.API_PORT, function () {
+app.listen(process.env.API_PORT, () =>
   console.log(
     `SigConsulting Dialer API ${process.env.API_VERSION} on Port ${process.env.API_PORT}! - End Point: /api/${process.env.API_VERSION}`
-  );
-});
+  )
+);

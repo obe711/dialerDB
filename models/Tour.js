@@ -11,6 +11,7 @@ const tourSchema = new mongoose.Schema(
     confirmed: { type: Boolean, default: false },
     status: { type: String, default: "PENDING" },
     agent: { type: Number, default: 0000 },
+    sms: [{ type: mongoose.Schema.Types.ObjectId, ref: "Sms" }],
   },
   { timestamps: { createdAt: "created_on", updatedAt: "updated_on" } }
 );
