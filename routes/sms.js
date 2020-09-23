@@ -1,6 +1,7 @@
+require("dotenv").config();
 const router = require("express").Router();
-const { Tour } = require("../models/Tour");
-const { Sms } = require("../models/Sms");
+const { Sms, PhoneNumber } = require("../models/Sms");
+const { ChatBot } = require("../models/ChatBot");
 const { apiErrorHandler } = require("../services");
 const twilio = require("twilio");
 const client = require("twilio")(
@@ -9,6 +10,21 @@ const client = require("twilio")(
 );
 const MessagingResponse = require("twilio").twiml.MessagingResponse;
 const shouldValidate = process.env.NODE_ENV !== "development";
+const dialogflow = require("@google-cloud/dialogflow");
+
+const sessionClient = new dialogflow.SessionsClient();
+
+function sendToBot(id, query) {
+  return sessionClient.detectIntent({
+    session: sessionClient.projectAgentSessionPath("faq-hecb", id),
+    queryInput: {
+      text: {
+        text: query,
+        languageCode: "en-US",
+      },
+    },
+  });
+}
 
 // Send Message
 router.post("/out", async (req, res) => {
@@ -23,27 +39,63 @@ router.post("/out", async (req, res) => {
 // Receive Message
 router.post(
   "/in",
-  twilio.webhook({ validate: shouldValidate }),
-  async (req, res) => {
-    try {
-      const { To, From, Body } = req.body;
-      const foundMatchingTour = await Tour.findOne({ phone: From }).exec();
-      const newMessage = await new Sms({ To, From, Body }, { strict: false });
-      if (foundMatchingTour) {
-        foundMatchingTour.sms = [newMessage._id, ...foundMatchingTour.sms];
-        newMessage.tour = foundMatchingTour._id;
-        await foundMatchingTour.save();
-      }
-      await newMessage.save();
-
-      const response = new MessagingResponse();
-      response.message(`Please call me if you need anything`);
-      res.set("Content-Type", "text/xml");
-      res.send(response.toString());
-    } catch (err) {
-      apiErrorHandler(res, err);
-    }
-  }
+  twilio.webhook({ validate: true }),
+  saveMessageData,
+  chatbotReply,
+  sendResponseSms
 );
 
+async function saveMessageData(req, res, next) {
+  const newMessage = await new Sms(req.body);
+  const foundPhoneNumber = await PhoneNumber.findOne({ phone: req.body.From });
+  if (foundPhoneNumber) {
+    foundPhoneNumber.history.push(newMessage._id);
+    req.body.sessionId = foundPhoneNumber._id;
+    await foundPhoneNumber.save();
+  } else {
+    const newPhone = await new PhoneNumber({
+      phone: req.body.From,
+      history: [newMessage._id],
+    }).save();
+    req.body.sessionId = newPhone._id;
+  }
+  await newMessage.save();
+  return next();
+}
+
+function sendResponseSms(req, res, next) {
+  try {
+    const { sms } = req.body;
+    const response = new MessagingResponse();
+    response.message(sms);
+    res.set("Content-Type", "text/xml");
+    return res.send(response.toString());
+  } catch (ex) {
+    apiErrorHandler(res, err);
+  }
+}
+
+async function chatbotReply(req, res, next) {
+  try {
+    const [responses] = await sendToBot(req.body.sessionId, req.body.Body);
+    const { fulfillmentText, queryText, intent } = responses.queryResult;
+
+    const chatbot = new ChatBot({
+      sessionId: req.body.sessionId,
+      fulfillmentText,
+      queryText,
+      intent: intent.displayName,
+    });
+
+    const sessionPhone = await PhoneNumber.findById(req.body.sessionId);
+    sessionPhone.chatbot.push(chatbot._id);
+
+    chatbot.save();
+    sessionPhone.save();
+    req.body.sms = fulfillmentText;
+    next();
+  } catch (ex) {
+    apiErrorHandler(res, ex);
+  }
+}
 module.exports = router;

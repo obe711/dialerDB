@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const app = express();
+const bodyParser = require("body-parser");
 const cors = require("cors");
 const path = require("path");
 const mongoose = require("mongoose");
@@ -8,7 +9,11 @@ const errorPage = require("./middleware/errorPage");
 
 app.disable("x-powered-by");
 app.use(cors());
-app.use(express.json());
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }));
+// parse application/json
+app.use(bodyParser.json());
+//app.use(express.json());
 
 // Allow cors requests from any origin and with credentials
 app.use(
