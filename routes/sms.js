@@ -39,7 +39,7 @@ router.post("/out", async (req, res) => {
 // Receive Message
 router.post(
   "/in",
-  twilio.webhook({ validate: true }),
+  twilio.webhook({ validate: false }),
   saveMessageData,
   chatbotReply,
   sendResponseSms
